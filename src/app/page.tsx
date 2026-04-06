@@ -18,10 +18,10 @@ export default function Home() {
 
       <div style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 24px 8px" }}>
         <h1 style={{ fontSize: 24, fontWeight: 500, color: "var(--fg)", margin: "0 0 8px" }}>
-          👋 FancyTeams
+            👋 Bonjour! 现在创造未来
         </h1>
         <p style={{ fontSize: 14, lineHeight: 1.6, color: "var(--fg-secondary)", margin: 0 }}>
-          探索优秀的笔记与知识管理团队 · 精选 {tools.length} 款工具
+            「小而美」前沿技术团队图鉴 | 你是想卖一辈子糖水，还是加入他们改变世界？
         </p>
       </div>
 
