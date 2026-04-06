@@ -1,33 +1,89 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { Tool } from "@/data/tools";
 import LinkIcon from "./LinkIcon";
 
-export default function GalleryView({ tools }: { tools: Tool[] }) {
+export default function GalleryView({ tools: initialTools }: { tools: Tool[] }) {
+  const [order, setOrder] = useState<Tool[]>(initialTools);
   const [pos, setPos] = useState(0);
   const [anim, setAnim] = useState(false);
+  const hallRef = useRef<HTMLDivElement>(null);
 
   const go = useCallback((d: number) => {
     if (anim) return;
     const n = pos + d;
-    if (n < 0 || n >= tools.length) return;
+    if (n < 0 || n >= order.length) return;
     setAnim(true);
     setPos(n);
     setTimeout(() => setAnim(false), 700);
-  }, [anim, pos, tools.length]);
+  }, [anim, pos, order.length]);
+
+  // Mouse wheel navigation
+  useEffect(() => {
+    const el = hallRef.current;
+    if (!el) return;
+    let cooldown = false;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      if (cooldown) return;
+      if (Math.abs(e.deltaY) < 10) return;
+      cooldown = true;
+      if (e.deltaY > 0) go(1);
+      else go(-1);
+      setTimeout(() => { cooldown = false; }, 500);
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, [go]);
+
+  // Shuffle
+  const shuffle = () => {
+    const shuffled = [...order];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    setOrder(shuffled);
+    setPos(0);
+  };
 
   return (
     <div style={{ background: "var(--bg)", borderRadius: 16, overflow: "hidden", padding: "0 0 28px" }}>
+      {/* Header with shuffle */}
       <div style={{ padding: "16px 24px 0", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-        <span style={{ color: "var(--fg)", fontSize: 14, fontWeight: 500 }}>Gallery Walk</span>
-        <span style={{ color: "var(--fg-muted)", fontSize: 12 }}>{pos + 1} / {tools.length}</span>
+        <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+          <span style={{ color: "var(--fg)", fontSize: 14, fontWeight: 500 }}>Gallery Walk</span>
+          <button onClick={shuffle} style={{
+            padding: "4px 12px", borderRadius: 8,
+            border: "1px solid var(--border)", background: "var(--bg-card)",
+            color: "var(--fg-secondary)", fontSize: 12, cursor: "pointer",
+            transition: "all 0.2s", display: "flex", alignItems: "center", gap: 4,
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.borderColor = "var(--border-hover)"; e.currentTarget.style.color = "var(--fg)"; }}
+          onMouseLeave={(e) => { e.currentTarget.style.borderColor = "var(--border)"; e.currentTarget.style.color = "var(--fg-secondary)"; }}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M16 3h5v5" /><path d="M4 20 21 3" />
+              <path d="M21 16v5h-5" /><path d="M15 15l6 6" />
+              <path d="M4 4l5 5" />
+            </svg>
+            Shuffle
+          </button>
+        </div>
+        <span style={{ color: "var(--fg-muted)", fontSize: 12 }}>{pos + 1} / {order.length}</span>
       </div>
 
-      <div style={{
-        position: "relative", height: 540,
+      {/* Scroll hint */}
+      <div style={{ textAlign: "center", padding: "8px 0 0", fontSize: 11, color: "var(--fg-muted)" }}>
+        scroll to navigate
+      </div>
+
+      {/* 3D Hall */}
+      <div ref={hallRef} style={{
+        position: "relative", height: 560,
         perspective: 1800, perspectiveOrigin: "50% 46%",
-        overflow: "hidden",
+        overflow: "hidden", cursor: "ns-resize",
       }}>
         <div style={{
           position: "absolute", bottom: 0, left: 0, right: 0, height: 160,
@@ -35,25 +91,29 @@ export default function GalleryView({ tools }: { tools: Tool[] }) {
           pointerEvents: "none",
         }} />
 
-        {tools.map((t, i) => {
+        {order.map((t, i) => {
           const depth = i - pos;
           if (depth < -0.5 || depth > 7) return null;
 
           const isL = i % 2 === 0;
+          const isF = depth >= 0 && depth < 1;
+
+          // All cards use the same positioning formula
           const sc = Math.max(0.05, 1 - depth * 0.14);
           const zT = -depth * 210;
           const yOff = -6 - depth * 22;
           const xPct = (isL ? -38 : 38) * sc;
-          const rotY = (isL ? 30 : -30) * Math.max(0.2, 1 - depth * 0.12);
+          const rotYVal = (isL ? 30 : -30) * Math.max(0.2, 1 - depth * 0.12);
+          const cardWidth = 255;
+
           const op = depth < 0 ? 0 : Math.max(0, 1 - depth * 0.14);
-          const isF = depth >= 0 && depth < 1;
           const blur = depth > 4 ? Math.min((depth - 4) * 1.5, 4) : 0;
 
           return (
             <div key={t.id} style={{
               position: "absolute", left: `calc(50% + ${xPct}%)`, top: "50%", width: 255,
               transformStyle: "preserve-3d",
-              transform: `translate(-50%,-50%) translate3d(0px,${yOff}px,${zT}px) rotateY(${rotY}deg) scale(${sc})`,
+              transform: `translate(-50%,-50%) translate3d(0px,${yOff}px,${zT}px) rotateY(${rotYVal}deg) scale(${sc})`,
               opacity: op,
               zIndex: Math.round((7 - depth) * 10),
               transition: "all 0.7s cubic-bezier(0.25, 0.46, 0.45, 0.94)",
@@ -125,6 +185,7 @@ export default function GalleryView({ tools }: { tools: Tool[] }) {
         })}
       </div>
 
+      {/* Controls */}
       <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 16 }}>
         <button onClick={() => go(-1)} disabled={pos <= 0} style={{
           padding: "8px 20px", borderRadius: 10,
@@ -134,8 +195,8 @@ export default function GalleryView({ tools }: { tools: Tool[] }) {
           opacity: pos <= 0 ? 0.5 : 1, transition: "all 0.2s",
         }}>&#8592; Back</button>
         <div style={{ display: "flex", gap: 5 }}>
-          {tools.map((_, i) => (
-            <div key={i}
+          {order.map((t, i) => (
+            <div key={t.id}
               onClick={() => { if (!anim) { setAnim(true); setPos(i); setTimeout(() => setAnim(false), 700); } }}
               style={{
                 width: pos === i ? 20 : 6, height: 6, borderRadius: 3,
@@ -145,14 +206,14 @@ export default function GalleryView({ tools }: { tools: Tool[] }) {
             />
           ))}
         </div>
-        <button onClick={() => go(1)} disabled={pos >= tools.length - 1} style={{
+        <button onClick={() => go(1)} disabled={pos >= order.length - 1} style={{
           padding: "8px 20px", borderRadius: 10,
-          border: pos >= tools.length - 1 ? "1px solid var(--border)" : "none",
-          background: pos >= tools.length - 1 ? "var(--bg-card)" : "var(--fg)",
-          color: pos >= tools.length - 1 ? "var(--border-hover)" : "var(--bg)",
+          border: pos >= order.length - 1 ? "1px solid var(--border)" : "none",
+          background: pos >= order.length - 1 ? "var(--bg-card)" : "var(--fg)",
+          color: pos >= order.length - 1 ? "var(--border-hover)" : "var(--bg)",
           fontSize: 13, fontWeight: 500,
-          cursor: pos >= tools.length - 1 ? "default" : "pointer",
-          opacity: pos >= tools.length - 1 ? 0.5 : 1, transition: "all 0.2s",
+          cursor: pos >= order.length - 1 ? "default" : "pointer",
+          opacity: pos >= order.length - 1 ? 0.5 : 1, transition: "all 0.2s",
         }}>Forward &#8594;</button>
       </div>
     </div>
