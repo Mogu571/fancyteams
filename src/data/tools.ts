@@ -138,4 +138,17 @@ export const tools: Tool[] = [
     features: ["中文优化", "块编辑器", "双向链接", "信息卡片", "国内服务器", "团队协作"],
     highlights: "国内访问速度快，中文排版体验好",
   },
+  {
+    id: "typora",
+    name: "Typora",
+    description: "简洁的 Markdown 编辑器，所见即所得。",
+    category: "writing",
+    founded: "2015",
+    headquarters: "上海，中国",
+    website: "typora.io",
+    pricing: "$14.99 买断",
+    color: "#4B8BBE",
+    features: ["所见即所得", "Markdown", "主题切换", "导出多格式"],
+    highlights: "最受欢迎的 Markdown 编辑器之一",
+  },
 ];
