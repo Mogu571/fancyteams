@@ -1,95 +1,43 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { tools } from "@/data/tools";
 import Header from "@/components/Header";
-import Hero from "@/components/Hero";
-import SearchBar from "@/components/SearchBar";
-import CategoryFilter from "@/components/CategoryFilter";
-import ToolCard from "@/components/ToolCard";
-import Footer from "@/components/Footer";
+import MasonryView from "@/components/MasonryView";
+import CarouselView from "@/components/CarouselView";
+import GalleryView from "@/components/GalleryView";
 
-const categoryMap: Record<string, string[]> = {
-  all: [],
-  note: ["note"],
-  workspace: ["workspace"],
-  knowledge: ["knowledge"],
-  writing: ["writing"],
-};
+type ViewMode = "masonry" | "carousel" | "gallery";
 
 export default function Home() {
-  const [search, setSearch] = useState("");
-  const [category, setCategory] = useState("all");
-
-  const filtered = useMemo(() => {
-    return tools.filter((t) => {
-      const catMatch =
-        category === "all" || categoryMap[category]?.includes(t.category);
-      const q = search.toLowerCase();
-      const searchMatch =
-        !q ||
-        t.name.toLowerCase().includes(q) ||
-        t.description.toLowerCase().includes(q) ||
-        t.features.some((f) => f.toLowerCase().includes(q)) ||
-        t.highlights.toLowerCase().includes(q);
-      return catMatch && searchMatch;
-    });
-  }, [search, category]);
+  const [view, setView] = useState<ViewMode>("masonry");
 
   return (
-    <div style={{ minHeight: "100vh", display: "flex", flexDirection: "column" }}>
-      <Header />
-      <Hero count={tools.length} />
+    <div style={{ minHeight: "100vh" }}>
+      <Header view={view} setView={setView} />
 
-      <main
-        style={{
-          flex: 1,
-          maxWidth: "1200px",
-          margin: "0 auto",
-          padding: "2rem 2rem 4rem",
-          width: "100%",
-          boxSizing: "border-box",
-        }}
-      >
-        <div style={{ display: "flex", flexDirection: "column", gap: "16px", marginBottom: "2rem" }}>
-          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: "16px" }}>
-            <CategoryFilter active={category} onChange={setCategory} />
-            <SearchBar value={search} onChange={setSearch} />
-          </div>
-          <div style={{ fontSize: "14px", color: "var(--muted)" }}>
-            共 {filtered.length} 款工具
-            {category !== "all" && " · 已筛选"}
-            {search && ` · 搜索: "${search}"`}
-          </div>
-        </div>
+      <div style={{ maxWidth: 1100, margin: "0 auto", padding: "32px 24px 8px" }}>
+        <h1 style={{ fontSize: 24, fontWeight: 500, color: "var(--fg)", margin: "0 0 8px" }}>
+          👋 FancyTeams
+        </h1>
+        <p style={{ fontSize: 14, lineHeight: 1.6, color: "var(--fg-secondary)", margin: 0 }}>
+          探索优秀的笔记与知识管理团队 · 精选 {tools.length} 款工具
+        </p>
+      </div>
 
-        {filtered.length > 0 ? (
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(340px, 1fr))", gap: "20px" }}>
-            {filtered.map((tool, i) => (
-              <ToolCard key={tool.id} tool={tool} index={i} />
-            ))}
-          </div>
-        ) : (
-          <div style={{ textAlign: "center", padding: "4rem 2rem" }}>
-            <div style={{ fontSize: "48px", marginBottom: "16px", opacity: 0.3 }}>
-              🔍
-            </div>
-            <p style={{ fontSize: "16px", color: "var(--muted)" }}>没有找到匹配的工具</p>
-            <button
-              onClick={() => { setSearch(""); setCategory("all"); }}
-              style={{
-                marginTop: "12px", padding: "8px 20px", borderRadius: "10px",
-                border: "1px solid var(--card-border)", background: "transparent",
-                color: "var(--accent)", cursor: "pointer", fontSize: "14px",
-              }}
-            >
-              清除筛选
-            </button>
-          </div>
-        )}
+      <main style={{ maxWidth: 1100, margin: "0 auto", padding: "8px 16px 60px" }}>
+        {view === "masonry" && <MasonryView tools={tools} />}
+        {view === "carousel" && <CarouselView tools={tools} />}
+        {view === "gallery" && <GalleryView tools={tools} />}
       </main>
 
-      <Footer />
+      <footer style={{
+        borderTop: "0.5px solid var(--border)",
+        padding: "24px", textAlign: "center",
+        fontSize: 12, color: "var(--fg-muted)",
+      }}>
+        FancyTeams · Built with Next.js
+      </footer>
     </div>
   );
 }
