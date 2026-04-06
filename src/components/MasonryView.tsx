@@ -17,7 +17,8 @@ export default function MasonryView({ tools }: { tools: Tool[] }) {
               padding: 8,
               animation: `fadeInUp 0.4s ${ci * 0.06 + i * 0.04}s both ease-out`,
             }}>
-              {i % 3 === 0 ? (
+              {/* 60% image cards: positions 0,1,3 in every 5 are image cards */}
+              {i % 5 !== 2 && i % 5 !== 4 ? (
                 <article style={{
                   overflow: "hidden", borderRadius: 12,
                   border: "1px solid var(--border)", background: "var(--bg-card)",
