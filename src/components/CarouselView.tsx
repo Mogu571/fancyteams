@@ -1,17 +1,44 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { Tool } from "@/data/tools";
 import Logo from "./Logo";
 
 export default function CarouselView({ tools }: { tools: Tool[] }) {
   const [a, setA] = useState(Math.floor(tools.length / 2));
+  const [anim, setAnim] = useState(false);
+  const carouselRef = useRef<HTMLDivElement>(null);
+
+  const go = useCallback((d: number) => {
+    if (anim) return;
+    setAnim(true);
+    setA((p) => (p + d + tools.length) % tools.length);
+    setTimeout(() => setAnim(false), 500);
+  }, [anim, tools.length]);
+
+  // Mouse wheel navigation
+  useEffect(() => {
+    const el = carouselRef.current;
+    if (!el) return;
+    let cooldown = false;
+    const onWheel = (e: WheelEvent) => {
+      e.preventDefault();
+      if (cooldown || Math.abs(e.deltaY) < 10) return;
+      cooldown = true;
+      if (e.deltaY > 0) go(1);
+      else go(-1);
+      setTimeout(() => { cooldown = false; }, 400);
+    };
+    el.addEventListener("wheel", onWheel, { passive: false });
+    return () => el.removeEventListener("wheel", onWheel);
+  }, [go]);
 
   return (
     <div>
-      <div style={{
+      <div ref={carouselRef} style={{
         position: "relative", height: 480,
         display: "flex", alignItems: "center", justifyContent: "center", overflow: "hidden",
+        cursor: "ns-resize",
       }}>
         {tools.map((t, i) => {
           const off = i - a;
@@ -78,7 +105,7 @@ export default function CarouselView({ tools }: { tools: Tool[] }) {
 
       <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 20, marginTop: 16 }}>
         <button
-          onClick={() => setA((p) => (p - 1 + tools.length) % tools.length)}
+          onClick={() => go(-1)}
           style={{
             width: 40, height: 40, borderRadius: "50%",
             border: "1px solid var(--border)", background: "var(--bg-card)",
@@ -96,7 +123,7 @@ export default function CarouselView({ tools }: { tools: Tool[] }) {
           ))}
         </div>
         <button
-          onClick={() => setA((p) => (p + 1) % tools.length)}
+          onClick={() => go(1)}
           style={{
             width: 40, height: 40, borderRadius: "50%",
             border: "1px solid var(--border)", background: "var(--bg-card)",
