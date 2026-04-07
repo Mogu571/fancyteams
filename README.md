@@ -42,6 +42,3 @@ src/
     └── tools.ts           # 工具数据与类型定义
 ```
 
-## License
-
-MIT
