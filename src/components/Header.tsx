@@ -1,18 +1,17 @@
 "use client";
 
-type ViewMode = "masonry" | "carousel" | "gallery";
+type TabMode = "companies" | "jobs";
 
-const labels: Record<ViewMode, string> = {
-  masonry: "瀑布流",
-  carousel: "轮播",
-  gallery: "画廊",
+const labels: Record<TabMode, string> = {
+  companies: "Teams",
+  jobs: "Jobs",
 };
 
 export default function Header({
-  view, setView,
+  tab, setTab,
 }: {
-  view: ViewMode;
-  setView: (v: ViewMode) => void;
+  tab: TabMode;
+  setTab: (t: TabMode) => void;
 }) {
   return (
     <header style={{
@@ -31,14 +30,14 @@ export default function Header({
           display: "flex", gap: 2, background: "var(--border)",
           borderRadius: 10, padding: 3,
         }}>
-          {(Object.keys(labels) as ViewMode[]).map((k) => (
-            <button key={k} onClick={() => setView(k)} style={{
-              padding: "5px 16px", borderRadius: 8, border: "none",
-              background: view === k ? "var(--bg-card)" : "transparent",
-              color: view === k ? "var(--fg)" : "var(--fg-muted)",
-              fontWeight: view === k ? 500 : 400,
+          {(Object.keys(labels) as TabMode[]).map((k) => (
+            <button key={k} onClick={() => setTab(k)} style={{
+              padding: "5px 20px", borderRadius: 8, border: "none",
+              background: tab === k ? "var(--bg-card)" : "transparent",
+              color: tab === k ? "var(--fg)" : "var(--fg-muted)",
+              fontWeight: tab === k ? 500 : 400,
               fontSize: 13, cursor: "pointer", transition: "all 0.2s",
-              boxShadow: view === k ? "0 1px 3px rgba(0,0,0,0.06)" : "none",
+              boxShadow: tab === k ? "0 1px 3px rgba(0,0,0,0.06)" : "none",
             }}>
               {labels[k]}
             </button>
